@@ -28,7 +28,7 @@ const handleLogin = async () => {
     console.log(res.data);
     // save token
     localStorage.setItem("token", res.data.token);
-    alert("Login successful");
+    localStorage.setItem("user", JSON.stringify(res.data.user));
 
     // redirect
     window.location.href = "/dashboard";

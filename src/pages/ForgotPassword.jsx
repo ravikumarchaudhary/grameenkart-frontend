@@ -21,33 +21,52 @@ function ForgotPassword() {
 
     try {
       setLoading(true);
-      await API.post("/send-otp", { email });
+      await API.post("/send-otp", { email, type: "resetpassword" });
 
       setStep(2);
       setOtp(["", "", "", "", "", ""]);
       setMessage("OTP sent");
 
     } catch (err) {
-      setMessage("Failed to send OTP");
+        setMessage("Failed to send OTP");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
+
+const handleKeyDown = (e, index) => {
+  if (e.key === "Backspace") {
+    if (otp[index]) {
+      // If current box has value → clear it ONLY
+      const newOtp = [...otp];
+      newOtp[index] = "";
+      setOtp(newOtp);
+    } else if (index > 0) {
+      // If already empty → go to previous
+      document.getElementById(`otp-${index - 1}`)?.focus();
+    }
+  }
+
+  if (e.key === "Enter") {
+    const finalOtp = otp.join("");
+
+    if (finalOtp.length === 6 && !loading) {
+      verifyOtp(finalOtp);
+    }
+  }
+};
 
   // 🔥 OTP INPUT
   const handleOtpChange = (e, index) => {
     const value = e.target.value.replace(/[^0-9]/g, "");
-    if (!value) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    if (index < 5) {
+    if (value && index < 5) {
       document.getElementById(`otp-${index + 1}`)?.focus();
     }
-
-    if (newOtp.join("").length === 6) {
+    if (newOtp.join("").length === 6 && !loading) {
       verifyOtp(newOtp.join(""));
     }
   };
@@ -117,26 +136,34 @@ function ForgotPassword() {
         <div className="login-right" style={{ width: "100%" }}>
 
           <h2>Forgot Password</h2>
-
           {message && <p className="message">{message}</p>}
 
-          {/* STEP 1 */}
-          {step === 1 && (
-            <>
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+{step === 1 && (
+  <form
+    className="forgot-form"
+    onSubmit={(e) => {
+      e.preventDefault();
+      handleSendOtp();
+    }}
+  >
+    <input
+      type="email"
+      placeholder="Enter your email"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      className="forgot-input"
+    />
 
-              <button onClick={handleSendOtp} disabled={loading}>
-                {loading ? "Sending..." : "Send OTP"}
-              </button>
-            </>
-          )}
-
-          {/* STEP 2 - OTP */}
+    <button
+      type="submit"
+      disabled={loading}
+      className="forgot-btn"
+    >
+      {loading ? "Sending..." : "Send OTP"}
+    </button>
+  </form>
+)}
+ 
           {step === 2 && (
             <div className="otp-input-container">
               {[...Array(6)].map((_, i) => (
@@ -147,12 +174,12 @@ function ForgotPassword() {
                   maxLength="1"
                   value={otp[i]}
                   onChange={(e) => handleOtpChange(e, i)}
+                  onKeyDown={(e) => handleKeyDown(e, i)}
                 />
               ))}
             </div>
           )}
 
-          {/* STEP 3 - RESET PASSWORD */}
           {step === 3 && (
             <>
               <input
@@ -187,7 +214,6 @@ function ForgotPassword() {
               </button>
             </>
           )}
-
         </div>
       </div>
     </div>

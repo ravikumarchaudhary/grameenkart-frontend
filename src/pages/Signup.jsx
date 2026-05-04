@@ -46,7 +46,8 @@ function Signup() {
         setMessage("");
 
         const res = await API.post("/send-otp", {
-        email: form.email,
+         email: form.email,
+         type: "createuser"
         });
 
         setOtp(["", "", "", "", "", ""]);   // 🔥 ADD THIS
@@ -131,26 +132,22 @@ function Signup() {
     }
   };
 
-  const handleOtpChange = (e, index) => {
+const handleOtpChange = (e, index) => {
     const value = e.target.value.replace(/[^0-9]/g, "");
-
-    if (!value) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    // Move to next input
-    if (index < 5) {
-        const nextInput = document.getElementById(`otp-${index + 1}`);
-        if (nextInput) nextInput.focus();
+    if (value && index < 5) {
+        document.getElementById(`otp-${index + 1}`)?.focus();
     }
-
-    // Auto verify when filled
+    if (!value && index > 0) {
+        document.getElementById(`otp-${index - 1}`)?.focus();
+    }
     if (newOtp.join("").length === 6) {
         verifyOtpAuto(newOtp.join(""));
     }
-  };
+    };
 
   const verifyOtpAuto = async (finalOtp) => {
     try {
